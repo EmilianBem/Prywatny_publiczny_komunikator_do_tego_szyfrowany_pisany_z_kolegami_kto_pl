@@ -41,6 +41,16 @@ app.get('/conversations', async (req, res) =>{
   res.status(200).send(doc);
 });
 
+app.get('/posts', async (req, res) =>{
+  const doc = await getPosts(db, req.query.id);
+  res.status(200).send(doc);
+});
+
+app.post('/newpost', async (req, res) =>{
+  const doc = await newPost(db, req.query.id, req.query.tags, req.query.hashtags, req.query.images, req.query.text);
+  res.status(200).send(doc);
+});
+
 app.post('/newconv', async (req, res) =>{
   const doc = await newConversationMessage(db, req.query.user_id, req.query.members, req.query.images, req.query.text);
   res.status(200).send(doc);

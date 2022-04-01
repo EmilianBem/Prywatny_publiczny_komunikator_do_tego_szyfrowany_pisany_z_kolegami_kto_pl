@@ -18,8 +18,10 @@
     members: id uczestników konwersacji
     images: wiadomo obrazki, musi buć pełny url bo to tylko demo elo benc
     text: zawartość wiadomości w formie tekstowej, no bo obrazki juz były a audio nie ma
+    
    d) d jak dupa bo coś nie śmiga czyli tak się debuguje
     http://localhost:3000/dupa?conv_id=AeN23iJF3eHrypUiFtdG&user_id=h0BDH2qvLpzWSqVGFfhY
+    
    e) eee więcej to se sami zobaczycie bo widać w kodzie ponieważ jest czysty, przejrzysty i samokomentujacy
     
 6. tu bedzie jakis frontend 

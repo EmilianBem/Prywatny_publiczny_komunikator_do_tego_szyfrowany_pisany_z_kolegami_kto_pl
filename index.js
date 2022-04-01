@@ -41,16 +41,6 @@ app.get('/conversations', async (req, res) =>{
   res.status(200).send(doc);
 });
 
-app.get('/posts', async (req, res) =>{
-  const doc = await getPosts(db, req.query.id);
-  res.status(200).send(doc);
-});
-
-app.post('/newpost', async (req, res) =>{
-  const doc = await newPost(db, req.query.id, req.query.tags, req.query.hashtags, req.query.images, req.query.text);
-  res.status(200).send(doc);
-});
-
 app.post('/newconv', async (req, res) =>{
   const doc = await newConversationMessage(db, req.query.user_id, req.query.members, req.query.images, req.query.text);
   res.status(200).send(doc);
@@ -134,35 +124,6 @@ async function getConversations(db, user_id) {
   return convList;
 }
 
-
-async function getPosts(db, user_id) {
-  
-  const postsRef = db.collection('posts');
-  const snapshot = await postsRef.where('author', '==', user_id).get();
-  
-  if (snapshot.empty) {
-    console.log('No matching documents.');
-    return;
-  }  
-
-  let postsList = [];
-  snapshot.forEach(doc => {
-    console.log(doc.id, '=>', doc.data());
-    let post = {
-      post_id: doc.id,
-      author: doc.data().author,
-      created_at: doc.data().created_at._seconds.toString().toHHMMSS(),
-      text: doc.data().text,
-      images: doc.data().images,
-      seen_by: doc.data().seen_by
-    };
-
-    postsList.push(post);
-  });
-  
-  return postsList;
-}
-
 async function newMessage(db, user_id, _images, _text, _conv_id) {
 
   const res = await db.collection('messages').add({
@@ -193,23 +154,7 @@ console.log('Added conversation with ID: ', res.id);
   return 'Added conversation with ID: '+ res.id;
 }
 
-async function newPost(db, user_id, _tags, _hashtags, _images, _text) {
-  
-  const res = await db.collection('posts').add({
-  author: user_id,
-  created_at: 'today',
-  images: {0: _images},
-  text: _text,
-  tags: _tags,
-  hashtags: _hashtags,
-  seen_by: {0: user_id}
-});
-
-console.log('Added document with ID: ', res.id);
-
-  return 'Added document with ID: '+ res.id;
-}
-
+//Konwersja stringów do daty
 String.prototype.toHHMMSS = function () {
     var sec_num = parseInt(this, 10); // don't forget the second param
     var hours   = Math.floor(sec_num / 3600);

@@ -1,0 +1,23 @@
+{
+  "name": "Prywatny_publiczny_komunikator_do_tego_szyfrowany_pisany_z_kolegami_kto_pl",
+  "version": "1.0.0",
+  "description": "1. Instalacja node.js (apt-get czy inny .zip na windzie)\r 2. git clone\r 3. utwórz baze we firebase i dodaj plik .json\r 4. node index.js\r 5. Przykłady działania/użycia:\r    a)  Pobierz wszyystkie wiadomości z konwersacji o id: AeN23iJF3eHrypUiFtdG\r     http://localhost:3000/messages?id=AeN23iJF3eHrypUiFtdG",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmilianBem/Prywatny_publiczny_komunikator_do_tego_szyfrowany_pisany_z_kolegami_kto_pl.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmilianBem/Prywatny_publiczny_komunikator_do_tego_szyfrowany_pisany_z_kolegami_kto_pl/issues"
+  },
+  "homepage": "https://github.com/EmilianBem/Prywatny_publiczny_komunikator_do_tego_szyfrowany_pisany_z_kolegami_kto_pl#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}

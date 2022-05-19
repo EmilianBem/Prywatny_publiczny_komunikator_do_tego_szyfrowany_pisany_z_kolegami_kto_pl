@@ -1,168 +1,103 @@
-// Import the functions you need from the SDKs you need
-const admin = require('firebase-admin');
-//const getAnalytics = require('firebase/analytics');
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+const path = require("path");
 
-const express = require('express');
-const app = express();
-const PORT = 8080;
-app.use(express.json());
+const bcrypt = require("bcryptjs");
+const bodyParser = require("body-parser");
+const csurf = require("csurf");
+const express = require("express");
+const mongoose = require("mongoose");
+const sessions = require("client-sessions");
 
-const serviceAccount = require('./SERVICE_ACCOUNT_CONFIG.json');
+const auth = require("./autoryzacja");
+const authRoutes = require("./routes/auth");
+const mainRoutes = require("./routes/main");
+const models = require("./models");
+const settings = require("./settings");
 
-// Initialize Firebase
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+let app = express();
 
-app.listen(PORT, () => console.log(`API 🟢`))
+// init
+mongoose.connect("mongodb://localhost:27017/messenger");
 
-const db = admin.firestore();
+// settings
+app.set("view engine", "pug");
+app.set("staticDir", path.join(__dirname, "static"));
 
-app.get('/dupa', async (req, res) =>{
-  const doc1 = await getMessages(db, req.query.conv_id);
-  const doc2 = await getConversations(db, req.query.user_id);
-  res.status(200).send(doc1 + doc2);
-});
-
-app.get('/userdata', async (req, res) =>{
-  const doc = await getUserData(db, req.query.id);
-  res.status(200).send(doc);
-});
-
-app.get('/messages', async (req, res) =>{
-  const doc = await getMessages(db, req.query.id);
-  res.status(200).send(doc);
-});
-
-app.get('/conversations', async (req, res) =>{
-  const doc = await getConversations(db, req.query.id);
-  res.status(200).send(doc);
-});
-
-app.post('/newconv', async (req, res) =>{
-  const doc = await newConversationMessage(db, req.query.user_id, req.query.members, req.query.images, req.query.text);
-  res.status(200).send(doc);
-});
-
-app.post('/newmsg', async (req, res) =>{
-  const doc = await newMessage(db, req.query.id, req.query.images, req.query.text, req.query.conv_id);
-  res.status(200).send(doc);
-});
-
-
-async function getUserData(db, user_id) {
-
-  const userRef = db.collection('users').doc(user_id);
-  const doc = await userRef.get();
-
-  if (doc.empty) {
-    console.log('No matching documents.');
-    return;
-  } else {
-    console.log('Document data:', doc.data());
+// middleware
+app.use("/static", express.static(app.get("staticDir")));
+app.use(sessions({
+  cookieName: "session",
+  secret: settings.SESSION_SECRET_KEY,
+  duration: settings.SESSION_DURATION,
+  activeDuration: settings.SESSION_EXTENSION_DURATION,
+  cookie: {
+    httpOnly: true,
+    ephemeral: settings.SESSION_EPHEMERAL_COOKIES,
+    secure: settings.SESSION_SECURE_COOKIES
   }
-  let user = {
-      user_id: doc.id,
-      email: doc.data().email,
-      name: doc.data().name,
-      following: doc.data().following,
-      followers: doc.data().followers
-    };
-  return user;
-}
+}));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(csurf());
+app.use(auth.loadUserFromSession);
 
-async function getMessages(db, conversation_id) {
+// routes
+app.use(authRoutes);
+app.use(mainRoutes);
 
-  const msgRef = db.collection('messages');
-  const snapshot = await msgRef.where('conv_id', '==', conversation_id).get();
-  if (snapshot.empty) {
-    console.log('No matching documents.');
-    return;
-  }  
-
-  let msgList = [];
-  snapshot.forEach(doc => {
-    console.log(doc.id, '=>', doc.data());
-    let message = {
-      message_id: doc.id,
-      author: doc.data().author,
-      conv_id: doc.data().conv_id,
-      created_at: doc.data().created_at.toString().toHHMMSS(),
-      text: doc.data().text
-    };
-
-    msgList.push(message);
-  });
-  
-  return msgList;
-}
-
-async function getConversations(db, user_id) {
-
-  const convRef = db.collection('conversations');
-  const snapshot = await convRef.where('members', 'array-contains-any', [user_id]).get();
-  
-  if (snapshot.empty) {
-    console.log('No matching documents.');
-    return;
-  }  
-
-  let convList = [];
-  snapshot.forEach(doc => {
-    console.log(doc.id, '=>', doc.data());
-    let conversation = {
-      conversation_id: doc.id,
-      name: doc.data().name,
-      members: doc.data().members,
-    };
-
-    convList.push(conversation);
-  });
-  
-  return convList;
-}
-
-async function newMessage(db, user_id, _images, _text, _conv_id) {
-
-  const res = await db.collection('messages').add({
-  author: user_id,
-  conv_id: _conv_id,
-  created_at: Date.now(),
-  images: _images,
-  text: _text,
-  seen_by: {0: user_id}
+// error handling
+app.use((err, req, res, next) => {
+  res.status(500).send("Something broke :( Please try again.");
 });
 
-console.log('Added message with ID: ', res.id);
+const server = app.listen(settings.APP_PORT, () => {
+  console.log(`App running on port ${settings.APP_PORT}`)
+})
 
-  return 'Added message with ID: '+ res.id;
-}
+const io = require('socket.io')(server, {
+  cors: {
+    origin: ["http://localhost:8080"]
+  }
+})
 
-async function newConversationMessage(db, user_id, _members, _images, _text) {
-  
-  const res = await db.collection('conversations').add({
-    members: _members,
-    name: _members
+io.on('connection', (socket) => {
+  console.log('a user connected');
+
+  socket.on('nowa-wiadomosc', (message, room) => {
+    if(room === ''){
+      console.log('room not found!');
+    } else {
+      io.to(room).emit('nowa-wiadomosc', message);//.tresc.toString());
+      let nowa = new models.Wiadomosc();
+      nowa.autorId = message.autorId;
+      nowa.konwersacjaId = message.konwersacjaId;
+      nowa.tresc = message.tresc;
+      nowa.wyslano = Date.now();
+      nowa.save();
+    }
   });
 
-  const doc = await newMessage(db, user_id, _images, _text, res.id);
+  socket.on('nowa-konfa', (konfa, autor) => {
+    if(konfa === ''){
+      console.log('error: not found!');
+    } else {
+      let nowa = new models.Konwersacja();
+      nowa.nazwa = konfa.nazwa;
+      nowa.uczestnicy = konfa.uczestnicy;
+      nowa.save();
+      models.Konwersacja
+          .find({ $and: [ { nazwa: konfa.nazwa }, { uczestnicy: { $all: [konfa.uczestnicy]}} ]}, async (err, docs) => {
+            if (err) {
+              console.log(err);
+            } else {
+              await console.log(docs[0]._id.toString());
+              io.to(autor).emit('konfa-redirect', autor, docs[0]._id.toString());
+            }
+          })
+          .limit(1);
+      }
+  });
 
-console.log('Added conversation with ID: ', res.id);
+  socket.on('join-room', room => {
+    socket.join(room)
+  })
 
-  return 'Added conversation with ID: '+ res.id;
-}
-
-//Konwersja stringów do daty
-String.prototype.toHHMMSS = function () {
-    var sec_num = parseInt(this, 10); // don't forget the second param
-    var hours   = Math.floor(sec_num / 3600);
-    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-    var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-    if (hours   < 10) {hours   = "0"+hours;}
-    if (minutes < 10) {minutes = "0"+minutes;}
-    if (seconds < 10) {seconds = "0"+seconds;}
-    return hours+':'+minutes+':'+seconds;
-}
+});

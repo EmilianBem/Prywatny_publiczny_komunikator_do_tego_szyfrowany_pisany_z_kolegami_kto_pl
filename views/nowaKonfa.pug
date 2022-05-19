@@ -1,0 +1,45 @@
+extends base
+
+block vars
+  - var title = "Dodawanie konwersacji"
+  - var uzytkownicy = uzytkownicy;
+  - var userId = userId.id.toString();
+
+block body
+  .container
+    .vertical-center
+      .jumbotron.col-sm-8
+        .lewo #[a(href="/dashboard") < Powrót]
+        .jumbotron.col-sm-12
+          h3 Utwórz nową konwersacje:
+        form#send-form
+          .field.has-addons
+            p.control.is-expanded
+              input(type='text', class='input', placeholder='Nazwa konwersacji', id='nazwa')
+              br
+              br
+              input(type='text', class='input', placeholder='Odbiorcy(id)...', id='odbiorcy')
+              input(type='submit', class='button is-success', value='>>')
+        script.
+          const socket = io();
+
+          $('form').submit(() => {
+            let konfa = {};
+            konfa.nazwa = $('#nazwa').val();
+            konfa.uczestnicy = ['!{userId}', $('#odbiorcy').val()];
+
+            socket.emit('join-room', `!{userId}`);
+            socket.emit('nowa-konfa', konfa, `!{userId}`);
+            console.log(konfa.uczestnicy, konfa.nazwa);
+
+            return false;
+          });
+
+          socket.on('konfa-redirect', (autor, room) => {
+            if (!room) {
+              console.log('error: no room');
+              return false;
+            }
+            if (autor !== '!{userId}') return false;
+            window.location.href = '/messaging/?konfaId=' + room;
+          });

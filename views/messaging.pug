@@ -1,0 +1,51 @@
+extends base
+
+block vars
+  - var title = "Wiadomosci"
+  - var konfaId = konfaId;
+  - var userId = userId.id.toString();
+
+block body
+  .container
+    .vertical-center
+      .jumbotron.col-sm-8
+        .lewo #[a(href="/dashboard") < Powrót]
+        .jumbotron.col-sm-12
+          h3 #{user.firstName}'s User Data
+          pre #{userString}
+          each val in wiadomosciString
+            if (val.autorId === user.id)
+              pre.prawo= val.tresc
+            else
+              pre.lewo= val.tresc
+        form#send-form
+            .field.has-addons
+              p.control.is-expanded
+                input(type='text', class='input', placeholder='Masz cos moze ten???', id='message')
+                input(type='submit', class='button is-success', value='>>')
+        script.
+          const socket = io();
+          const room = `!{konfaId}`;
+
+          socket.emit('join-room', room);
+
+          $('form').submit(() => {
+            let message = {};
+            message.autorId = `!{userId}`;
+            message.konwersacjaId = room;
+            message.tresc = $('#message').val();
+
+            socket.emit('nowa-wiadomosc', message, room);
+            $('#message').val('');
+            return false;
+          });
+
+          socket.on('nowa-wiadomosc', (message) => {
+            if(message.autorId === `!{userId}`){
+              $('.jumbotron').last().append($('' +
+                      '<pre class="prawo">' +
+                      '<img src=\'!{userId.photo}\' />').text(message.tresc.toString()));
+            } else {
+              $('.jumbotron').last().append($('<pre class="lewo">').text(message.tresc.toString()));
+            }
+          });

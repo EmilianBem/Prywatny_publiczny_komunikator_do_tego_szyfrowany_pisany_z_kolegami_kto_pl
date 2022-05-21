@@ -1,6 +1,5 @@
 const path = require("path");
 
-const bcrypt = require("bcryptjs");
 const bodyParser = require("body-parser");
 const csurf = require("csurf");
 const express = require("express");
@@ -44,7 +43,7 @@ app.use(authRoutes);
 app.use(mainRoutes);
 
 // error handling
-app.use((err, req, res, next) => {
+app.use((req, res) => {
   res.status(500).send("Something broke :( Please try again.");
 });
 

@@ -22,11 +22,10 @@ router.get("/register", (req, res) => {
 router.post("/register", (req, res) => {
     let hash = bcrypt.hashSync(req.body.password, settings.BCRYPT_WORK_FACTOR);
     req.body.password = hash;
-    let user = new models.User(req.body);
-
+    let user = new models.Uzytkownik(req.body);
     user.save((err) => {
         if (err) {
-            let error = "Something bad happened! Please try agian.";
+            let error = "Something bad happened! Please try again.";
 
             if (err.code === 11000) {
                 error = "That email is already taken. Please try another.";
@@ -56,7 +55,7 @@ router.get("/login", (req, res) => {
  * Once a user is logged in, they will be sent to the dashboard page.
  */
 router.post("/login", (req, res) => {
-    models.User.findOne({ email: req.body.email }, "firstName lastName email password", (err, user) => {
+    models.Uzytkownik.findOne({ email: req.body.email }, "firstName lastName email password", (err, user) => {
         if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
             return res.render("login", {
                 error: "Incorrect email / password.",

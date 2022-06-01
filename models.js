@@ -6,6 +6,8 @@ module.exports.Uzytkownik = mongoose.model("Uzytkownik", new mongoose.Schema({
   email:        { type: String, required: true, unique: true },
   password:     { type: String, required: true },
   photoUrl:     { type: String},
+  publicKey:    { type: String, required: true},
+  salt:         { type: String, required: true}
 }));
 
 module.exports.Konwersacja = mongoose.model("Konwersacja", new mongoose.Schema({
@@ -14,8 +16,8 @@ module.exports.Konwersacja = mongoose.model("Konwersacja", new mongoose.Schema({
 }));
 
 module.exports.Wiadomosc = mongoose.model("Wiadomosc", new mongoose.Schema({
-  autorId :    { type: String, required: true },
-  konwersacjaId :    { type: String, required: true },
-  tresc :    { type: String, required: true },
-  wyslano :    { type: String, required: true }
+  autorId:    { type: String, required: true },
+  konwersacjaId:    { type: String, required: true },
+  tresc:    { type: String, required: true },
+  wyslano:    { type: String, required: true }
 }));

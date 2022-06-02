@@ -1,6 +1,7 @@
 const express = require('express');
 
-const auth = require('../auth');
+const auth = require('../autoryzacja');
+const models = require("../models");
 
 let router = express.Router();
 
@@ -18,10 +19,106 @@ router.get("/dashboard", auth.loginRequired, (req, res) => {
     let userString = {
         firstName: req.user.firstName,
         lastName: req.user.lastName,
-        email: req.user.email
+        email: req.user.email,
+        id: req.user._id,
+        photo: req.user.photoUrl
     };
 
-    res.render("dashboard", { userString: JSON.stringify(userString, null, 2) });
+    let konwersacjeArr = {};
+
+    models.Konwersacja.find({ uczestnicy: userString.id.toString()}, function (err, docs) {
+        if (err){
+            console.log(err);
+        }
+        else{
+
+            for(const x in docs){
+                konwersacjeArr[x] = {
+                    _id: docs[x]._id,
+                    nazwa: docs[x].nazwa,
+                    uczestnicy: docs[x].uczestnicy,
+                }
+            }
+
+            res.render("dashboard", {
+                userPhoto: userString.photo,
+                userString: JSON.stringify(userString, null, 2),
+                konwersacjeString: JSON.stringify(konwersacjeArr, null, 2),
+                konwersacjeArr: konwersacjeArr,
+            });
+        }
+    });
+});
+
+/**
+ * Render the messaging page.
+ */
+router.get("/messaging", (req, res) => {
+    let userString = {
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        email: req.user.email,
+        id: req.user._id,
+        photo: req.user.photoUrl
+    };
+    let konfaId = req.query.konfaId;
+
+    let wiadomosciString = {};
+
+    models.Wiadomosc.find({konwersacjaId: konfaId}, function (err, docs) {
+        if (err) {
+            console.log(err);
+        } else {
+            for (const x in docs) {
+                wiadomosciString[x] = {
+                    _id: docs[x]._id,
+                    autorId: docs[x].autorId,
+                    konwersacjaId: docs[x].konwersacjaId,
+                    tresc: docs[x].tresc,
+                    wyslano: docs[x].wyslano
+                }
+            }
+            res.render("messaging", {
+                userString: JSON.stringify(userString, null, 2),
+                wiadomosciString: wiadomosciString,//: JSON.stringify(wiadomosciString, null, 2)
+                konfaId: konfaId,
+                userId: userString
+            });
+        }
+    });
+});
+
+/**
+ * * Render the nowaKonfa page.
+ */
+router.get("/nowaKonfa", (req, res) => {
+    let userString = {
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        email: req.user.email,
+        id: req.user._id,
+        photo: req.user.photoUrl
+    };
+
+    let uzytkownicy = {};
+
+    models.Uzytkownik.find({_id: {$ne: userString.id} }, function (err, docs) {
+        if (err) {
+            console.log(err);
+        } else {
+            for (const x in docs) {
+                uzytkownicy[x] = {
+                    //to do
+                }
+            }
+            res.render("nowaKonfa", {
+                userString: JSON.stringify(userString, null, 2),
+                uzytkownicy: uzytkownicy,
+                userId: userString
+            });
+        }
+    });
 });
 
 module.exports = router;
+

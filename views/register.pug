@@ -33,5 +33,15 @@ block body
             .col-sm-10
               input.form-control(type="text", id="photoUrl", name="photoUrl", placeholder="Url do profilowego")
           .form-group
+            input.form-control(type="hidden", id="publicKey", name="publicKey")
+          .form-group
             .col-sm-offset-2.col-sm-10
               button.btn.btn-default(type="submit") Register
+
+  script.
+    generateKeyPair().then((keys) => {
+      saveKey(keys.privateKey);
+      exportKey(keys.publicKey).then((key) => {
+        $("#publicKey")[0].value = JSON.stringify(key);
+      })
+    })

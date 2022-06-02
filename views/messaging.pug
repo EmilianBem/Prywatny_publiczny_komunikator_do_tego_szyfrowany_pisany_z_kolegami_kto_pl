@@ -13,11 +13,6 @@ block body
         .jumbotron.col-sm-12
           h3 #{user.firstName}'s User Data
           pre #{userString}
-          each val in wiadomosciString
-            if (val.autorId === user.id)
-              pre.prawo= val.tresc
-            else
-              pre.lewo= val.tresc
         form#send-form
             .field.has-addons
               p.control.is-expanded
@@ -26,26 +21,43 @@ block body
         script.
           const socket = io();
           const room = `!{konfaId}`;
+          const publicKey = JSON.parse(`!{pKey}`);
+          importPublicKey(publicKey).then((k) => {
+            $('form').submit((e) => {
+              let textMessage = $('#message').val();
+              encrypt(textMessage, k).then((msg) => {
+                let message = {};
+                message.autorId = `!{userId}`;
+                message.konwersacjaId = room;
+                message.tresc = msg;
+
+                socket.emit('nowa-wiadomosc', message, room);
+              });
+              $('.jumbotron').last().append($('<pre class="prawo">' +
+                      '<img src=\'!{userId.photo}\' />').text(textMessage));
+              $('#message').val('');
+              return false;
+            });
+          })
 
           socket.emit('join-room', room);
 
-          $('form').submit(() => {
-            let message = {};
-            message.autorId = `!{userId}`;
-            message.konwersacjaId = room;
-            message.tresc = $('#message').val();
-
-            socket.emit('nowa-wiadomosc', message, room);
-            $('#message').val('');
-            return false;
-          });
-
-          socket.on('nowa-wiadomosc', (message) => {
-            if(message.autorId === `!{userId}`){
-              $('.jumbotron').last().append($('' +
-                      '<pre class="prawo">' +
-                      '<img src=\'!{userId.photo}\' />').text(message.tresc.toString()));
-            } else {
-              $('.jumbotron').last().append($('<pre class="lewo">').text(message.tresc.toString()));
+          importPrivateKey(loadKey()).then((privateKey) => {
+            let msgs = !{JSON.stringify(wiadomosciString)};
+            for (msg of msgs){
+              decrypt(new Uint8Array(msg.tresc.data), privateKey).then((decryptedMsg) => {
+                if (msgs._id !== `!{userId}`)
+                  $('.jumbotron').last().append($('<pre class="lewo">').text(buf2str(decryptedMsg)));
+                else {
+                  // jak odszyfrować własne wiadomości?
+                }
+              });
             }
+            socket.on('nowa-wiadomosc', (message) => {
+              if (message.autorId !== `!{userId}`) {
+                decrypt(message.tresc, privateKey).then((msg) => {
+                  $('.jumbotron').last().append($('<pre class="lewo">').text(buf2str(msg)));
+                });
+              }
+            });
           });

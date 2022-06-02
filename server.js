@@ -1,5 +1,6 @@
 const path = require("path");
 
+const bcrypt = require("bcryptjs");
 const bodyParser = require("body-parser");
 const csurf = require("csurf");
 const express = require("express");
@@ -43,8 +44,8 @@ app.use(authRoutes);
 app.use(mainRoutes);
 
 // error handling
-app.use((req, res) => {
-  res.status(500).send("Something broke :( Please try again.");
+app.use((err, req, res, next) => {
+  res.status(500).send("Something broke :( Please try again."+err);
 });
 
 const server = app.listen(settings.APP_PORT, () => {
@@ -81,18 +82,19 @@ io.on('connection', (socket) => {
       let nowa = new models.Konwersacja();
       nowa.nazwa = konfa.nazwa;
       nowa.uczestnicy = konfa.uczestnicy;
-      nowa.save();
-      models.Konwersacja
-          .find({ $and: [ { nazwa: konfa.nazwa }, { uczestnicy: { $all: [konfa.uczestnicy]}} ]}, async (err, docs) => {
-            if (err) {
-              console.log(err);
-            } else {
-              await console.log(docs[0]._id.toString());
-              io.to(autor).emit('konfa-redirect', autor, docs[0]._id.toString());
-            }
-          })
-          .limit(1);
-      }
+      nowa.save().then(r => {
+        models.Konwersacja
+            .find({ $and: [ { nazwa: konfa.nazwa }, { uczestnicy: { $all: [konfa.uczestnicy]}} ]}, async (err, docs) => {
+              if (err) {
+                console.log(err);
+              } else {
+                await console.log(docs[0]._id.toString());
+                io.to(autor).emit('konfa-redirect', autor, docs[0]._id.toString());
+              }
+            })
+            .limit(1);
+      });
+    }
   });
 
   socket.on('join-room', room => {

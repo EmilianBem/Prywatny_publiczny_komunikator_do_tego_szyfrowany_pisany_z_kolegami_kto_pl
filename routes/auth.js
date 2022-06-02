@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const express = require("express");
 
-const auth = require("../auth");
+const auth = require("../autoryzacja");
 const models = require("../models");
 const settings = require("../settings");
 
@@ -23,9 +23,10 @@ router.post("/register", (req, res) => {
     let hash = bcrypt.hashSync(req.body.password, settings.BCRYPT_WORK_FACTOR);
     req.body.password = hash;
     let user = new models.Uzytkownik(req.body);
+
     user.save((err) => {
         if (err) {
-            let error = "Something bad happened! Please try again.";
+            let error = "Something bad happened! Please try agian.";
 
             if (err.code === 11000) {
                 error = "That email is already taken. Please try another.";

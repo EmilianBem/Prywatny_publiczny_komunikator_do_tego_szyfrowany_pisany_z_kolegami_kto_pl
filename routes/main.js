@@ -63,7 +63,7 @@ router.get("/messaging", (req, res) => {
     };
     let konfaId = req.query.konfaId;
 
-    let wiadomosciString = {};
+    let wiadomosciString = [];
 
     models.Wiadomosc.find({konwersacjaId: konfaId}, function (err, docs) {
         if (err) {
@@ -78,12 +78,18 @@ router.get("/messaging", (req, res) => {
                     wyslano: docs[x].wyslano
                 }
             }
-            res.render("messaging", {
-                userString: JSON.stringify(userString, null, 2),
-                wiadomosciString: wiadomosciString,//: JSON.stringify(wiadomosciString, null, 2)
-                konfaId: konfaId,
-                userId: userString
-            });
+            models.Konwersacja.findOne({"_id": konfaId}, (err, data) => {
+                data.uczestnicy = data.uczestnicy.filter((el) => el !== req.user._id);
+                models.Uzytkownik.findOne({"_id": data.uczestnicy[0]}, (err, data) => {
+                    res.render("messaging", {
+                        userString: JSON.stringify(userString, null, 2),
+                        wiadomosciString: wiadomosciString,//: JSON.stringify(wiadomosciString, null, 2)
+                        konfaId: konfaId,
+                        userId: userString,
+                        pKey: data.publicKey,
+                    });
+                })
+            })
         }
     });
 });

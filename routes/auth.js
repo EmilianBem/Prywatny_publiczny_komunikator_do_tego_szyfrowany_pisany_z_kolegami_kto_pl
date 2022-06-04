@@ -8,23 +8,16 @@ const settings = require("../settings");
 let router = express.Router();
 
 /**
- * Render the registration page.
- */
-router.get("/register", (req, res) => {
-    res.render("register", { csrfToken: req.csrfToken() });
-});
-
-/**
  * Create a new user account.
  *
  * Once a user is logged in, they will be sent to the dashboard page.
  */
 router.post("/register", (req, res) => {
-    let hash = bcrypt.hashSync(req.body.password, settings.BCRYPT_WORK_FACTOR);
-    req.body.password = hash;
+    req.body.password = bcrypt.hashSync(req.body.password, settings.BCRYPT_WORK_FACTOR);
     let user = new models.Uzytkownik(req.body);
 
     user.save((err) => {
+        console.log(err);
         if (err) {
             let error = "Something bad happened! Please try agian.";
 
@@ -32,23 +25,16 @@ router.post("/register", (req, res) => {
                 error = "That email is already taken. Please try another.";
             }
 
-            return res.render("register", {
+            return res.json({
                 error: error,
-                csrfToken: req.csrfToken()
             });
         }
 
         auth.createUserSession(req, res, user);
-        res.redirect("/dashboard");
+        res.json({});
     });
 });
 
-/**
- * Render the login page.
- */
-router.get("/login", (req, res) => {
-    res.render("login", { csrfToken: req.csrfToken() });
-});
 
 /**
  * Log a user into their account.
@@ -58,14 +44,13 @@ router.get("/login", (req, res) => {
 router.post("/login", (req, res) => {
     models.Uzytkownik.findOne({ email: req.body.email }, "firstName lastName email password", (err, user) => {
         if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
-            return res.render("login", {
-                error: "Incorrect email / password.",
-                csrfToken: req.csrfToken()
+            return res.json({
+                error: "Incorrect email / password."
             });
         }
 
         auth.createUserSession(req, res, user);
-        res.redirect("/dashboard");
+        res.json({});
     });
 });
 
@@ -77,7 +62,7 @@ router.get("/logout", (req, res) => {
         req.session.reset();
     }
 
-    res.redirect("/");
+    res.json({});
 });
 
 module.exports = router;

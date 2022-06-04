@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
 /**
  * Render the dashboard page.
  */
-router.get("/dashboard", auth.loginRequired, (req, res) => {
+router.get("/user", auth.loginRequired, (req, res) => {
     let userString = {
         firstName: req.user.firstName,
         lastName: req.user.lastName,
@@ -24,25 +24,25 @@ router.get("/dashboard", auth.loginRequired, (req, res) => {
         photo: req.user.photoUrl
     };
 
-    let konwersacjeArr = {};
-
     models.Konwersacja.find({ uczestnicy: userString.id.toString()}, function (err, docs) {
         if (err){
             console.log(err);
         }
         else{
-
-            for(const x in docs){
+            let konwersacjeArr = []
+            for(let x in docs){
                 konwersacjeArr[x] = {
                     _id: docs[x]._id,
                     nazwa: docs[x].nazwa,
                     uczestnicy: docs[x].uczestnicy,
+                    userPhoto: userString.photo
                 }
             }
 
-            res.render("dashboard", {
+            res.json({
                 userPhoto: userString.photo,
                 userString: JSON.stringify(userString, null, 2),
+                userId: req.user._id,
                 konwersacjeString: JSON.stringify(konwersacjeArr, null, 2),
                 konwersacjeArr: konwersacjeArr,
             });
@@ -53,7 +53,7 @@ router.get("/dashboard", auth.loginRequired, (req, res) => {
 /**
  * Render the messaging page.
  */
-router.get("/messaging", (req, res) => {
+router.get("/messages", (req, res) => {
     let userString = {
         firstName: req.user.firstName,
         lastName: req.user.lastName,
@@ -79,9 +79,14 @@ router.get("/messaging", (req, res) => {
                 }
             }
             models.Konwersacja.findOne({"_id": konfaId}, (err, data) => {
+                console.log(data);
+                if (data === undefined) {
+                    res.json({"error": 1});
+                    return;
+                }
                 data.uczestnicy = data.uczestnicy.filter((el) => el !== req.user._id);
                 models.Uzytkownik.findOne({"_id": data.uczestnicy[0]}, (err, data) => {
-                    res.render("messaging", {
+                    res.json({
                         userString: JSON.stringify(userString, null, 2),
                         wiadomosciString: wiadomosciString,//: JSON.stringify(wiadomosciString, null, 2)
                         konfaId: konfaId,

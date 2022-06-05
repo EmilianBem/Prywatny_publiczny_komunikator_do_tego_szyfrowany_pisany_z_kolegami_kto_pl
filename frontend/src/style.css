@@ -1,0 +1,93 @@
+body {
+    background-color: #333333;
+}
+h1 {
+    text-align: center;
+} h1 a {
+      color: #999999;
+      text-decoration: none !important;
+  }
+
+h1 a:hover {
+    color: aqua;
+}
+h2 {
+    text-align: center;
+}
+h2 {
+    color: #999999;
+    text-decoration: none !important;
+}
+
+.menu a{
+    text-align: right;
+    margin-right: 1.5em;
+    float: right;
+}
+
+.home .vertical-center p {
+    text-align: center !important;
+}
+
+.vertical-center {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+.jumbotron {
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: none;
+}
+
+.jumbotron.form {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.prawo {
+    text-align: right;
+    display: block;
+}
+
+.lewo {
+    text-align: left;
+    display: block;
+}
+
+.photo {
+    width: 2vw;
+    height: 2vW;
+}
+form {
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 0px;
+}
+
+.input {
+    display: inline;
+}
+
+.button {
+    display: inline;
+}
+
+.footer {
+    font-size: 1.5em;
+    text-align: center;
+}
+
+h3 {
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+.error {
+    text-align: center;
+    color: red;
+}

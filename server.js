@@ -6,6 +6,7 @@ const csurf = require("csurf");
 const express = require("express");
 const mongoose = require("mongoose");
 const sessions = require("client-sessions");
+const cors = require("cors");
 
 const auth = require("./autoryzacja");
 const authRoutes = require("./routes/auth");
@@ -36,15 +37,17 @@ app.use(sessions({
   }
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(csurf());
 app.use(auth.loadUserFromSession);
-
-// routes
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 app.use(authRoutes);
 app.use(mainRoutes);
-
 // error handling
 app.use((err, req, res, next) => {
+  console.log(err);
   res.status(500).send("Something broke :( Please try again."+err);
 });
 
@@ -54,7 +57,8 @@ const server = app.listen(settings.APP_PORT, () => {
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: ["http://localhost:8080"]
+    methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
+    origin: ["http://localhost:8080", "http://localhost:3000"]
   }
 })
 

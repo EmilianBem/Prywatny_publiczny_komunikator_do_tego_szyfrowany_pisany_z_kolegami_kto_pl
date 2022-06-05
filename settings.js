@@ -1,6 +1,6 @@
 module.exports = {
   //APP PORT
-  APP_PORT: 3000,
+  APP_PORT: 4000,
   // the 'strength' of our bcrypt hashing algorithm
   // 14 is a good strength at the present time based on the strength of
   // commodity computers

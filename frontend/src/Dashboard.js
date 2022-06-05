@@ -46,7 +46,6 @@ class Dasboard extends React.Component {
             .then(response => response.json()
                 .then(response => {
                     this.userStringRef.current.innerHTML = response.userString;
-                    console.log(response.konwersacjeArr);
                     this.konwersacjeRef.current.setState({["konwersacje"]: response.konwersacjeArr})
                 }))
             .catch(err => {

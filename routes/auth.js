@@ -17,7 +17,6 @@ router.post("/register", (req, res) => {
     let user = new models.Uzytkownik(req.body);
 
     user.save((err) => {
-        console.log(err);
         if (err) {
             let error = "Something bad happened! Please try agian.";
 

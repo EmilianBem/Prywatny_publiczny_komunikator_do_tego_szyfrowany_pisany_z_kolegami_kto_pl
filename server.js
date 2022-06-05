@@ -19,12 +19,7 @@ let app = express();
 // init
 mongoose.connect("mongodb://localhost:27017/messenger");
 
-// settings
-app.set("view engine", "pug");
-app.set("staticDir", path.join(__dirname, "static"));
-
 // middleware
-app.use("/static", express.static(app.get("staticDir")));
 app.use(sessions({
   cookieName: "session",
   secret: settings.SESSION_SECRET_KEY,
@@ -92,7 +87,6 @@ io.on('connection', (socket) => {
               if (err) {
                 console.log(err);
               } else {
-                await console.log(docs[0]._id.toString());
                 io.to(autor).emit('konfa-redirect', autor, docs[0]._id.toString());
               }
             })

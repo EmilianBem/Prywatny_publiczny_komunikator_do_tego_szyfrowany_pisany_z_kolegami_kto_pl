@@ -5,16 +5,6 @@ const models = require("../models");
 
 let router = express.Router();
 
-/**
- * Render the home page.
- */
-router.get("/", (req, res) => {
-    res.render("index");
-});
-
-/**
- * Render the dashboard page.
- */
 router.get("/user", auth.loginRequired, (req, res) => {
     let userString = {
         firstName: req.user.firstName,
@@ -50,9 +40,6 @@ router.get("/user", auth.loginRequired, (req, res) => {
     });
 });
 
-/**
- * Render the messaging page.
- */
 router.get("/messages", (req, res) => {
     let userString = {
         firstName: req.user.firstName,
@@ -79,7 +66,6 @@ router.get("/messages", (req, res) => {
                 }
             }
             models.Konwersacja.findOne({"_id": konfaId}, (err, data) => {
-                console.log(data);
                 if (data === undefined) {
                     res.json({"error": 1});
                     return;
@@ -95,38 +81,6 @@ router.get("/messages", (req, res) => {
                     });
                 })
             })
-        }
-    });
-});
-
-/**
- * * Render the nowaKonfa page.
- */
-router.get("/nowaKonfa", (req, res) => {
-    let userString = {
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        email: req.user.email,
-        id: req.user._id,
-        photo: req.user.photoUrl
-    };
-
-    let uzytkownicy = {};
-
-    models.Uzytkownik.find({_id: {$ne: userString.id} }, function (err, docs) {
-        if (err) {
-            console.log(err);
-        } else {
-            for (const x in docs) {
-                uzytkownicy[x] = {
-                    //to do
-                }
-            }
-            res.render("nowaKonfa", {
-                userString: JSON.stringify(userString, null, 2),
-                uzytkownicy: uzytkownicy,
-                userId: userString
-            });
         }
     });
 });
